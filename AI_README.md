@@ -28,3 +28,7 @@ This repository is a GitHub Actions automation that backs up an entire Notion wo
 ## Operational Notes
 - Runs on a schedule and can be triggered manually.
 - Commits changes to the repo if backup output changed.
+- `main` branch stores code/config; `data` branch stores only `backup/` output.
+- Local run: set `NOTION_TOKEN`, then `python scripts/backup_notion.py --output backup`.
+- Logging flags: `--log-every`, `--requests-per-second`, `--max-retries`.
+- Slugify keeps Chinese characters; empty titles fall back to `untitled`.
