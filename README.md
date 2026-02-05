@@ -21,6 +21,11 @@
 - `main`：存放脚本与配置。
 - `data`：只存放备份输出（`backup/` 目录）。
 
+## 数据清理
+- 仓库包含每周一次的 `data` 分支历史清理（仅保留当前内容的单次提交）。
+- 触发方式：Actions 中的 `Data Branch Cleanup` 或定时任务。
+- 清理流程只在最后 `git push --force` 成功时才会替换 `data` 分支。
+
 ## 输出结构
 - 备份输出在 `backup/`。
 - 每个页面写到 `backup/<page-slug>/index.md`。

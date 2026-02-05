@@ -32,3 +32,4 @@ This repository is a GitHub Actions automation that backs up an entire Notion wo
 - Local run: set `NOTION_TOKEN`, then `python scripts/backup_notion.py --output backup`.
 - Logging flags: `--log-every`, `--requests-per-second`, `--max-retries`.
 - Slugify keeps Chinese characters; empty titles fall back to `untitled`.
+- Weekly cleanup workflow `Data Branch Cleanup` resets `data` branch history to a single commit while keeping current content.
