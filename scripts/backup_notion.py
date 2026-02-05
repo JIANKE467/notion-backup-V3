@@ -69,7 +69,7 @@ class NotionClient:
 
 def slugify(value: str) -> str:
     value = value.strip().lower()
-    value = re.sub(r"[^\w\s-]", "", value)
+    value = re.sub(r"[^\w\s-\u4e00-\u9fff]", "", value)
     value = re.sub(r"[\s_-]+", "-", value)
     return value or "untitled"
 
@@ -497,6 +497,13 @@ def main() -> None:
     pages: Dict[str, Dict[str, Any]] = {}
     databases: Dict[str, Dict[str, Any]] = {}
     data_sources: Dict[str, Dict[str, Any]] = {}
+    parent_children: Dict[str, List[str]] = {}
+
+    def index_parent_child(page_obj: Dict[str, Any]) -> None:
+        parent = page_obj.get("parent", {})
+        if parent.get("type") == "page_id":
+            parent_id = parent.get("page_id")
+            parent_children.setdefault(parent_id, []).append(page_obj["id"])
 
     print("Scanning Notion workspace...")
     pages_list = list_all(
@@ -506,6 +513,7 @@ def main() -> None:
     )
     for page in pages_list:
         pages[page["id"]] = page
+        index_parent_child(page)
 
     data_source_list = list_all(
         client,
@@ -524,6 +532,7 @@ def main() -> None:
         ds_pages = list_all(client, f"/data_sources/{ds_id}/query", {"page_size": 100})
         for page in ds_pages:
             pages.setdefault(page["id"], page)
+            index_parent_child(page)
 
     print(f"Found {len(pages)} pages, {len(databases)} databases, {len(data_sources)} data sources.")
 
@@ -534,7 +543,6 @@ def main() -> None:
     export_queue = list(pages.keys())
     exported: set = set()
 
-    total_pages = len(export_queue)
     processed = 0
     while export_queue:
         page_id = export_queue.pop(0)
@@ -547,6 +555,7 @@ def main() -> None:
 
         page = pages[page_id]
         processed += 1
+        total_pages = len(exported) + len(export_queue) + 1
         if args.log_every > 0 and (
             processed == 1 or processed == total_pages or processed % args.log_every == 0
         ):
@@ -560,13 +569,11 @@ def main() -> None:
         ensure_dir(page_dir)
 
         page_links: Dict[str, str] = {}
-        for child_id in pages.keys():
-            parent = pages[child_id].get("parent", {})
-            if parent.get("type") == "page_id" and parent.get("page_id") == page_id:
-                child_path = compute_page_path(
-                    child_id, pages, databases, data_sources, page_paths, db_paths, slug_registry, output_root
-                )
-                page_links[child_id] = os.path.relpath(child_path, page_dir).replace(os.sep, "/")
+        for child_id in parent_children.get(page_id, []):
+            child_path = compute_page_path(
+                child_id, pages, databases, data_sources, page_paths, db_paths, slug_registry, output_root
+            )
+            page_links[child_id] = os.path.relpath(child_path, page_dir).replace(os.sep, "/")
 
         blocks = get_blocks(client, page_id)
         page_ctx = {"page_dir": page_dir, "assets_dir": assets_dir, "page_links": page_links}
@@ -576,6 +583,7 @@ def main() -> None:
             if child_id not in pages:
                 child_resp = client.request("GET", f"/pages/{child_id}")
                 pages[child_id] = read_json(child_resp)
+                index_parent_child(pages[child_id])
             if child_id not in export_queue and child_id not in exported:
                 export_queue.append(child_id)
 
