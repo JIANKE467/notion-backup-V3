@@ -47,3 +47,8 @@
 - 内置限速与重试，降低被限流的概率。
 - 每次运行都是全量备份。
 - 页面标题转 slug 时会保留中文字符；如果标题为空或清洗后为空，会回退为 `untitled`。
+
+## 拉取/下载 注意
+- 如果要拉取/维护脚本文件，只拉取main分支即可，用如下命令：
+git clone -b main --single-branch --depth 1 git@github.com:JIANKE467/notion-backup-V3.git
+- 如果要查看备份的数据，不要拉取！直接下载data分支文件（图片太多拉取不下来）
