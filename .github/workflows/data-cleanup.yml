@@ -32,6 +32,9 @@ jobs:
           cp -a /tmp/notion-data/backup/. /tmp/notion-clean/backup
 
           REPO_URL=$(git config --get remote.origin.url)
+          if [[ "$REPO_URL" == https://github.com/* ]]; then
+            REPO_URL="https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          fi
           cd /tmp/notion-clean
           git init
           git config user.name "github-actions[bot]"
