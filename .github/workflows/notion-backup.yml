@@ -31,24 +31,23 @@ jobs:
         run: |
           python scripts/backup_notion.py --output backup
 
-      - name: Stage backup for data branch
-        run: |
-          rm -rf /tmp/notion-backup
-          mkdir -p /tmp/notion-backup
-          cp -a backup /tmp/notion-backup/backup
-
       - name: Commit and push to data branch if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin data || true
+
+          rm -rf /tmp/notion-data
           if git show-ref --verify --quiet refs/remotes/origin/data; then
-            git checkout -B data origin/data
+            git worktree add /tmp/notion-data origin/data
           else
-            git checkout -B data
+            git worktree add --orphan /tmp/notion-data data
           fi
-          git rm -r --ignore-unmatch backup
-          cp -a /tmp/notion-backup/backup ./backup
+
+          rm -rf /tmp/notion-data/backup
+          cp -a backup /tmp/notion-data/backup
+
+          cd /tmp/notion-data
           git add backup
           if git diff --cached --quiet; then
             echo "No changes to commit."
