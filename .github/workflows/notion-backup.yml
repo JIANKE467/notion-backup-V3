@@ -31,6 +31,12 @@ jobs:
         run: |
           python scripts/backup_notion.py --output backup
 
+      - name: Stage backup for data branch
+        run: |
+          rm -rf /tmp/notion-backup
+          mkdir -p /tmp/notion-backup
+          cp -a backup /tmp/notion-backup/backup
+
       - name: Commit and push to data branch if changed
         run: |
           git config user.name "github-actions[bot]"
@@ -42,7 +48,7 @@ jobs:
             git checkout -B data
           fi
           git rm -r --ignore-unmatch backup
-          git checkout -- backup
+          cp -a /tmp/notion-backup/backup ./backup
           git add backup
           if git diff --cached --quiet; then
             echo "No changes to commit."
