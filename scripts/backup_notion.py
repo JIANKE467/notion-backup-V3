@@ -69,7 +69,7 @@ class NotionClient:
 
 def slugify(value: str) -> str:
     value = value.strip().lower()
-    value = re.sub(r"[^\w\s-\u4e00-\u9fff]", "", value)
+    value = re.sub(r"[^\w\s\u4e00-\u9fff-]", "", value)
     value = re.sub(r"[\s_-]+", "-", value)
     return value or "untitled"
 
