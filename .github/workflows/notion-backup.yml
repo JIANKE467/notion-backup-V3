@@ -39,15 +39,16 @@ jobs:
 
           rm -rf /tmp/notion-data
           if git show-ref --verify --quiet refs/remotes/origin/data; then
-            git worktree add /tmp/notion-data origin/data
+            git worktree add -B data /tmp/notion-data origin/data
           else
-            git worktree add --orphan /tmp/notion-data data
+            git worktree add -B data /tmp/notion-data
           fi
 
           rm -rf /tmp/notion-data/backup
-          cp -a backup /tmp/notion-data/backup
+          cp -a backup/. /tmp/notion-data/backup
 
           cd /tmp/notion-data
+          git checkout -B data
           git add backup
           if git diff --cached --quiet; then
             echo "No changes to commit."
