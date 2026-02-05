@@ -1,0 +1,44 @@
+name: Data Branch Cleanup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 0"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cleanup data branch history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin data || true
+          if ! git show-ref --verify --quiet refs/remotes/origin/data; then
+            echo "No data branch found. Skip cleanup."
+            exit 0
+          fi
+
+          rm -rf /tmp/notion-data /tmp/notion-clean
+          git worktree add /tmp/notion-data origin/data
+          mkdir -p /tmp/notion-clean
+          cp -a /tmp/notion-data/backup/. /tmp/notion-clean/backup
+
+          REPO_URL=$(git config --get remote.origin.url)
+          cd /tmp/notion-clean
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add origin "$REPO_URL"
+          git add backup
+          git commit -m "chore: cleanup data history"
+          git push --force origin HEAD:data
+
+          echo "Cleanup complete: data branch history reset to a single commit."
