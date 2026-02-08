@@ -403,7 +403,13 @@ def compute_page_path(
     if page_id in page_paths:
         return page_paths[page_id]
 
-    page = pages[page_id]
+    page = pages.get(page_id)
+    if not page:
+        # Fallback: unknown page, place at root with safe name.
+        page_dir = os.path.join(root, f"unknown-{page_id}")
+        page_path = os.path.join(page_dir, "index.md")
+        page_paths[page_id] = page_path
+        return page_path
     parent = page.get("parent", {})
     parent_type = parent.get("type")
 
@@ -411,10 +417,13 @@ def compute_page_path(
         parent_dir = root
     elif parent_type == "page_id":
         parent_id = parent.get("page_id")
-        parent_path = compute_page_path(
-            parent_id, pages, databases, data_sources, page_paths, db_paths, slug_registry, root
-        )
-        parent_dir = os.path.dirname(parent_path)
+        if parent_id in pages:
+            parent_path = compute_page_path(
+                parent_id, pages, databases, data_sources, page_paths, db_paths, slug_registry, root
+            )
+            parent_dir = os.path.dirname(parent_path)
+        else:
+            parent_dir = root
     elif parent_type in ("database_id", "data_source_id"):
         if parent_type == "database_id":
             db_id = parent.get("database_id")
@@ -505,6 +514,19 @@ def main() -> None:
             parent_id = parent.get("page_id")
             parent_children.setdefault(parent_id, []).append(page_obj["id"])
 
+    def ensure_page_loaded(page_id: str) -> None:
+        current_id = page_id
+        while current_id and current_id not in pages:
+            page_resp = client.request("GET", f"/pages/{current_id}")
+            page_obj = read_json(page_resp)
+            pages[current_id] = page_obj
+            index_parent_child(page_obj)
+            parent = page_obj.get("parent", {})
+            if parent.get("type") == "page_id":
+                current_id = parent.get("page_id")
+            else:
+                break
+
     print("Scanning Notion workspace...")
     pages_list = list_all(
         client,
@@ -550,8 +572,7 @@ def main() -> None:
             continue
 
         if page_id not in pages:
-            page_resp = client.request("GET", f"/pages/{page_id}")
-            pages[page_id] = read_json(page_resp)
+            ensure_page_loaded(page_id)
 
         page = pages[page_id]
         processed += 1
@@ -581,9 +602,7 @@ def main() -> None:
 
         for child_id in child_pages:
             if child_id not in pages:
-                child_resp = client.request("GET", f"/pages/{child_id}")
-                pages[child_id] = read_json(child_resp)
-                index_parent_child(pages[child_id])
+                ensure_page_loaded(child_id)
             if child_id not in export_queue and child_id not in exported:
                 export_queue.append(child_id)
 
