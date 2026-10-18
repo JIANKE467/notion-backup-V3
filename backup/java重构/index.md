@@ -3605,6 +3605,14 @@ stream.mapMulti((element, downstream) -> {
     本章节讲Java I/O框架，我们知道，读写硬盘等IO操作需要使用系统调用，而不同操作系统的调用方式不同，而Java则通过Java IO框架屏蔽了这种差异，实现了：一套代码到处运行
     **JavaIO框架核心是通过流来操作IO数据的**
     注意⚠️：前面学的Stream流不隶属于`java.io`包，且特性/方法也是不一样的
+    这章的类型只分两种：字节流和字符流
+    本章所有流都源自**4 个抽象基类**（注意不是前两节的4个类）（后面的流都是在这4个类上进行了包装）
+    | **流类型** | **顶级基类** | **核心方法** | **处理单位** |
+    | --- | --- | --- | --- |
+    | 字节输入流 | `InputStream` | `read()` | byte（8 位） |
+    | 字节输出流 | `OutputStream` | `write(int b)` | byte（8 位） |
+    | 字符输入流 | `Reader` | `read(char[] cbuf)` | char（16 位） |
+    | 字符输出流 | `Writer` | `write(String str)` | char（16 位） |
     文件字节流
       本节的核心是FileInputStream类及**FileOutputStream类**，下面围绕该类进行展开
       # FileInputStream类（文件字节输入流）
@@ -4133,23 +4141,314 @@ OutputStreamWriter(OutputStream out, String charsetName)
     打印流
       打印流也是文件字节/字符流的工具类
       分两种类
+      # 打印流是干啥的
+      我们知道，可以使用文件输出字节/字符流的方法从流中输出内容到文件中，但这会带来一个问题：文件是按字符写入的，而字节输出流是按字节写入的，如果不使用转换流将字节转换成字符，就会出现字节流输出97，写进文件中变成a了（因为 97 是 a 的 ASCII 码）
+      因此使用普通输出流输出内容到文件就需要考虑格式转换
+      而打印流则提供了方便的输出方法，无需考虑格式转换，必要时会自动转换
+      # Q&A
+      Q：a存储的是97，97存储的也是97，怎么确保没有歧义的？
+      A：对于一般的数据结构，使用数据类型来标记到底是字符还是数字，但如果操作的是流的话，则需要手动处理一下
+      Q：打印流只能打印到控制台上吗？
+      A：并非，只是叫打印流这个名字，打印到哪里取决于构造时传入的参数（传入文件路径就打印到文件中，传入System.out就打印到控制台）
+      # 关于System.out
+      我们天天用System.out.println() 那你知道是什么意思吗？
+      - System是个类：**Java 给你准备的“系统级工具箱”，提供与运行环境打交道的一堆现成工具。**
+      - out是：一个静态变量，JVM启动时会将一个对象引用给它，这个对象就是控制台的输出流
+      - 所以，System.out实际是控制台输出流对象，System.out.println() 就是调用这个对象的printlnln()方法
+      - System.out是*PrintStream类型的对象*
       # **PrintStream类（字节打印流）**
-      继承关系：FilterOutputStream文件字节输出流（从流中输出）
-      构造方法：
+      继承关系：继承自FilterOutputStream类  文件字节输出流（从流中输出）
+      作用：提供简便的打印方法（省去类型转换的步骤）
+      构造方法：（决定打印到哪里）（创建流）
       ```java
-// 接收文件路径字符串
+// 接收文件路径字符串（打印到文件）
 PrintStream ps1 = new PrintStream("test.txt");
 
-// 接收 File 对象
+// 接收 File 对象（打印到文件）
 PrintStream ps2 = new PrintStream(new File("test.txt"));
 
-// 接收输出流，可开启自动刷新
+// 接收输出流，可开启自动刷新（打印到输出流/作为输出流的输入）
 PrintStream ps3 = new PrintStream(
         new FileOutputStream("test.txt"), true);
       ```
+      ```java
+//或者直接给**PrintStream类型的变量赋值
+//System.out是**控制台输出流对象
+//只有System.out可以直接赋值给PrintStream，因为System.out是*PrintStream类型的对象*
+PrintStream ps1 = **System.out；**
+      ```
+      常用方法：
+      println()方法
+      作用：换行打印，打印位置取决于构造方法
+      重载：有多种重载，这确保了它什么数据类型都能打印
 
+      print()方法
+      作用：不换行打印，打印位置取决于构造方法
+      重载：有多种重载，这确保了它什么数据类型都能打印
+      ### 使用方法
+      ```java
+public static void main(String[] args) {
+		//创建对象以获取流
+    try(PrintStream stream = new PrintStream("文件路径")){
+        // 向文件打印lbwnb
+        stream.println("lbwnb");  
+    }catch (IOException e){
+        
+    }
+}
+      ```
       # **PrintWriter类（字符打印流）**
       继承关系：FilterWriter文件字符输出流（从流中输出）
+      和上面一模一样，不写了
+    数据流（基本数据类型流）
+      与字节/字符流不同，数据流（基本数据类型流）支持以基本数据类型为单位进行读写
+      分两个类
+      **注意⚠️：基本数据类型流只能作为普通流的包装来使用，不能单独使用**
+      # **DataInputStream（输入数据流）**
+      继承：**DataInputStream继承自FilterInputStream（文件字节输入流）**
+      作用：用于读取数据（按基本数据类型）
+      构造方法：
+      | **构造方法** | **说明** |
+      | --- | --- |
+      | `DataInputStream(InputStream in)` | 传入一个DataInputStream类型对象 |
+      常用方法：
+      除了继承的方法，还有以下方法
+      | **方法** | **返回类型** | **说明** | 传入参数 |
+      | --- | --- | --- | --- |
+      | `readBoolean()` | boolean | 读取 1 个字节，非 0 为 true | 无 |
+      | `readByte()` | byte | 读取 1 个有符号字节 | 无 |
+      | `readUnsignedByte()` | int | 读取 1 个无符号字节（0~255） | 无 |
+      | `readShort()` | short | 读取 2 字节有符号短整数 | 无 |
+      | `readUnsignedShort()` | int | 读取 2 字节无符号短整数 | 无 |
+      | `readChar()` | char | 读取 2 字节字符 | 无 |
+      | `readInt()` | int | 读取 4 字节有符号整数 | 无 |
+      | `readLong()` | long | 读取 8 字节长整数 | 无 |
+      | `readFloat()` | float | 读取 4 字节浮点数 | 无 |
+      | `readDouble()` | double | 读取 8 字节双精度浮点数 | 无 |
+      | `readUTF()` | String | 读取改良 UTF-8 编码的字符串 | 无 |
+      批量读取
+      | **方法** | **说明** | 传入参数 |
+      | --- | --- | --- |
+      | `read()` | 读取下一个字节 | 无 |
+      | `read(byte[] b)` | 读若干字节存入缓冲数组 b | 数组引用 |
+      | `read(byte[] b, int off, int len)` | 读最多 len 个字节到 b 的 off 位置起 | 数组引用，起始下标，读字节数 |
+      | `readFully(byte[] b)` | **阻塞式**地读满整个 b 数组，否则抛 EOFException | 数组引用 |
+      | `readFully(byte[] b, int off, int len)` | 阻塞式读满 len 个字节 | 数组引用，起始下标，读字节数 |
+      | `skipBytes(int n)` | 跳过 n 个字节 | 字节数 |
+      例子：
+      ```java
+try {
+		DataInputStream dis = new DataInputStream(new FileInputStream("data.bin"));
+    dis.readInt();
+    dis.readDouble();
+    dis.readUTF();
+    dis.close();
+    }
+catch(IOException e){
+
+} 
+      ```
+      # **DataOutputStream （输出数据流）**
+      继承：**DataOutputStream 继承自 FilterOutputStream，并实现 DataOutput 接口**
+      作用：用于按基本数据类型将数据写入底层输出流
+      构造方法：
+      | **构造方法** | **说明** |
+      | --- | --- |
+      | `DataOutputStream(OutputStream out)` | 传入一个 OutputStream 类型的对象，通常包装文件字节流等普通输出流 |
+      常用方法：
+      除了继承的方法，还有以下方法
+      | **方法** | **说明** | 传入参数 |
+      | --- | --- | --- |
+      | `writeBoolean(boolean v)` | 写入 1 个字节，true 写为 1，false 写为 0 | 布尔值 |
+      | `writeByte(int v)` | 写入 1 个字节（只写低 8 位） | 整数值 |
+      | `writeShort(int v)` | 写入 2 个字节（只写低 16 位） | 整数值 |
+      | `writeChar(int v)` | 写入 2 个字节的字符 | 字符值 |
+      | `writeInt(int v)` | 写入 4 个字节的整数 | 整数值 |
+      | `writeLong(long v)` | 写入 8 个字节的长整数 | 长整数值 |
+      | `writeFloat(float v)` | 写入 4 个字节的浮点数 | 浮点数值 |
+      | `writeDouble(double v)` | 写入 8 个字节的双精度浮点数 | 双精度浮点数值 |
+      | `writeBytes(String s)` | 将字符串中每个字符的低 8 位写出；不适合写入一般 Unicode 文本 | 字符串 |
+      | `writeChars(String s)` | 将字符串中的每个字符按 2 个字节写出 | 字符串 |
+      | `writeUTF(String s)` | 以改良 UTF-8 格式写入字符串，并在前面写入字节长度 | 字符串 |
+      批量写入
+      | **方法** | **说明** | 传入参数 |
+      | --- | --- | --- |
+      | `write(int b)` | 写出一个字节（取低 8 位） | 整数值 |
+      | `write(byte[] b)` | 将数组中的字节写出 | 字节数组 |
+      | `write(byte[] b, int off, int len)` | 将数组从 off 位置开始的 len 个字节写出 | 字节数组，起始下标，写入字节数 |
+      | `flush()` | 刷新输出流，将缓冲的数据写到底层流 | 无 |
+      | `size()` | 返回目前写出的字节数 | 无 |
+      注意：
+      - 写入与读取时，数据类型和顺序必须对应；例如先 `writeInt()` 再 `writeDouble()`，读取时也应先 `readInt()` 再 `readDouble()`。
+      - `writeUTF()` 写入的是改良 UTF-8 格式，应使用 `DataInputStream.readUTF()` 读取；字符串编码后的长度不能超过 65535 字节。
+      - `DataOutputStream` 是普通输出流的包装流，关闭它时也会关闭底层输出流。
+      例子：
+      ```java
+try (DataOutputStream dos =
+         new DataOutputStream(new FileOutputStream("data.bin"))) {
+    dos.writeInt(100);
+    dos.writeDouble(3.14);
+    dos.writeUTF("Java");
+} catch (IOException e) {
+    e.printStackTrace();
+}
+      ```
+    对象流「未审核」
+      # 对象流是什么
+      对象流用于读写 Java 对象：把对象及其引用关系转换为字节序列，或从字节序列中恢复对象。这个过程分别称为**序列化**和**反序列化**。
+      对象流写出的不只是字段值，还包含恢复对象所需的类描述信息和对象引用信息（对象图）；方法的代码不会被序列化。对象流通常包装普通字节流（如文件字节流）使用。
+      | 操作 | 使用的类 | 作用 |
+      | --- | --- | --- |
+      | 序列化 | `ObjectOutputStream` | 将对象写入底层输出流 |
+      | 反序列化 | `ObjectInputStream` | 从底层输入流中读取并恢复对象 |
+      **注意：**对象流不是 `FilterInputStream` / `FilterOutputStream` 的子类，但构造时都需要传入一个普通输入或输出流。
+      # ObjectOutputStream（对象序列化）
+      作用：将对象及其对象图写入底层输出流。
+      继承与实现：继承自 `OutputStream`，并实现 `ObjectOutput` 接口。
+      构造方法：
+      | 构造方法 | 说明 |
+      | --- | --- |
+      | `ObjectOutputStream(OutputStream out)` | 将对象写入指定的输出流；创建时会写入对象流头信息 |
+      常用方法：
+      | 方法 | 说明 | 传入参数 |
+      | --- | --- | --- |
+      | `writeObject(Object obj)` | 序列化对象并写出；对象及其可达引用对象也会按规则处理 | 对象引用 |
+      | `writeUnshared(Object obj)` | 以非共享方式写出指定对象 | 对象引用 |
+      | `reset()` | 重置对象流的共享引用状态，后续写出时不复用之前记录的对象句柄 | 无 |
+      | `flush()` | 刷新输出流，将缓冲内容写到底层流 | 无 |
+      | `close()` | 关闭对象流及其底层输出流 | 无 |
+      `defaultWriteObject()`、`putFields()` 等方法用于类自定义序列化实现，通常在类的 `writeObject` 特殊方法中使用，初学时一般不需要直接调用。
+      # ObjectInputStream（对象反序列化）
+      作用：从底层输入流读取对象数据，并恢复对象。
+      继承与实现：继承自 `InputStream`，并实现 `ObjectInput` 接口。
+      构造方法：
+      | 构造方法 | 说明 |
+      | --- | --- |
+      | `ObjectInputStream(InputStream in)` | 从指定输入流读取对象；会读取并校验对象流头信息 |
+      常用方法：
+      | 方法 | 返回类型 | 说明 | 传入参数 |
+      | --- | --- | --- | --- |
+      | `readObject()` | `Object` | 读取并恢复一个对象；可能抛出 `ClassNotFoundException` | 无 |
+      | `readUnshared()` | `Object` | 以非共享方式读取一个对象 | 无 |
+      | `available()` | `int` | 返回可在不阻塞情况下读取的字节数估计值，不代表对象数量 | 无 |
+      | `close()` | `void` | 关闭对象流及其底层输入流 | 无 |
+      `defaultReadObject()`、`readFields()` 等方法用于类自定义反序列化实现，通常不需要在普通读取代码中直接调用。
+      # 使用示例
+      对象所属的类需要实现 `Serializable`。它是一个标记接口，不需要实现额外方法。
+      ```java
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+public class ObjectStreamDemo {
+    static class Person implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String name;
+        private int age;
+
+        Person(String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+
+        @Override
+        public String toString() {
+            return "Person{name='" + name + "', age=" + age + "}";
+        }
+    }
+
+    public static void main(String[] args) {
+        // 序列化：把对象写入文件
+        try (ObjectOutputStream out = new ObjectOutputStream(
+                new FileOutputStream("person.dat"))) {
+            out.writeObject(new Person("小明", 18));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // 反序列化：从文件恢复对象
+        try (ObjectInputStream in = new ObjectInputStream(
+                new FileInputStream("person.dat"))) {
+            Person person = (Person) in.readObject();
+            System.out.println(person);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+}
+      ```
+      # 序列化注意事项
+      - **类必须支持序列化：**对象的类需要实现 `java.io.Serializable`。如果对象图中包含其他对象，这些对象通常也需要可序列化；否则写出时可能抛出 `NotSerializableException`。不需要保存的字段可考虑声明为 `transient`，或使用自定义序列化逻辑。
+      - **静态字段不属于对象实例状态：**`static` 字段不会作为该对象的实例字段被序列化；`transient` 字段也不会按默认规则写出，反序列化后通常为默认值（如 `null`、`0`、`false`）。
+      - **声明 `serialVersionUID`：**它用于检查序列化版本兼容性。类的版本不兼容时，反序列化可能抛出 `InvalidClassException`。显式声明可避免仅依赖编译器计算的默认值。
+      - **读写顺序要对应：**连续写入多个对象时，读取端应按相同顺序调用 `readObject()`，并将返回的 `Object` 转换为正确类型。
+      - **对象引用会被跟踪：**对象流能够保留对象之间的共享引用和循环引用。同一个对象重复写出时，流可能复用已记录的引用；若需要在同一流中重新写出对象的最新状态，可在适当位置调用 `reset()`。
+      - **不要反序列化不可信数据：**反序列化可能触发对象构造相关逻辑，带来安全风险；只处理可信来源的数据。
+      - 关闭对象流也会关闭它包装的底层流。优先使用 `try-with-resources` 管理资源。
+      # 与数据流的区别
+      | 对比项 | 对象流 | 数据流 |
+      | --- | --- | --- |
+      | 主要用途 | 读写对象及其对象引用关系 | 按基本数据类型读写值 |
+      | 典型方法 | `writeObject()`、`readObject()` | `writeInt()`、`readInt()`、`writeUTF()`、`readUTF()` |
+      | 使用要求 | 对象类需支持序列化 | 读写双方需约定相同的数据类型和顺序 |
+      | 常见底层流 | 文件字节流、网络字节流等 | 文件字节流、网络字节流等 |
+    字节数组流「未审核」
+      # 字节数组流是什么
+      字节数组流用 `byte[]` 作为数据来源或存放位置，在内存中读写字节，不直接操作文件。`ByteArrayOutputStream` 把写入的数据暂存在内部缓冲区；`toByteArray()` 可以取出这些数据。`ByteArrayInputStream` 则从已有的字节数组中读取数据。[[1]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayOutputStream.html) [[2]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayInputStream.html)
+      # 两个核心类
+      | 类 | 继承关系 | 作用 |
+      | --- | --- | --- |
+      | `ByteArrayOutputStream` | `OutputStream` | 把字节写入内存中的字节数组 |
+      | `ByteArrayInputStream` | `InputStream` | 从已有的字节数组中读取字节 |
+      常用构造方法：
+      | 构造方法 | 说明 |
+      | --- | --- |
+      | `ByteArrayOutputStream()` | 创建一个内存输出流 |
+      | `ByteArrayInputStream(byte[] buf)` | 用指定字节数组创建输入流 |
+      | `ByteArrayInputStream(byte[] buf, int offset, int length)` | 只读取数组中指定范围的字节 |
+      常用方法：
+      | 类 | 方法 | 说明 |
+      | --- | --- | --- |
+      | `ByteArrayOutputStream` | `write(...)` | 把字节写入内存缓冲区 |
+      | `ByteArrayOutputStream` | `toByteArray()` | 将已写入的数据复制到一个新的字节数组中 |
+      | `ByteArrayOutputStream` | `size()` / `reset()` | 查看当前字节数 / 清空已写入的数据 |
+      | `ByteArrayInputStream` | `read()` | 读取一个字节；读到末尾返回 `-1` |
+      | `ByteArrayInputStream` | `available()` | 查看还剩多少字节可读 |
+      # 使用示例
+      下面先把 `A、B、C` 对应的字节写入内存，再从字节数组中读出来：
+      ```java
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
+public class ByteArrayStreamDemo {
+    public static void main(String[] args) {
+        byte[] source = {65, 66, 67}; // ASCII 中分别表示 A、B、C
+
+        // 输出流：把字节写入内存
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(source, 0, source.length);
+        byte[] data = out.toByteArray();
+
+        // 输入流：从字节数组中读取
+        ByteArrayInputStream in = new ByteArrayInputStream(data);
+        int value;
+        while ((value = in.read()) != -1) {
+            System.out.print((char) value);
+        }
+    }
+}
+      ```
+      输出：`ABC`
+      # 适用场景与注意事项
+      - **适合临时处理内存中的字节数据**，例如先拼接数据，再交给其他流处理。
+      - 和 [文件字节流](https://app.notion.com/p/3f95a2dd827680b3b95fc29f692a2525) 不同，它不直接读写磁盘文件；需要保存到文件时，可再把数据写入文件流。
+      - 数据都放在内存中，处理特别大的数据时要留意内存占用。`toByteArray()` 会复制一份数据，也会额外占用内存。[[1]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayOutputStream.html)
+      - 这两个字节数组流的 `close()` 不会产生实际影响；它们不负责释放文件等外部资源。[[2]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayInputStream.html) [[1]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayOutputStream.html)
+      **一句话记忆：**`ByteArrayOutputStream` 往内存里写，`ByteArrayInputStream` 从内存里的字节数组读。
 [Java编码逻辑](java编码逻辑/index.md)
   在Java中，我们需要按照面向对象的逻辑来编写软件，这部分专门用来说明Java对于面向对象的设计理念
   类
