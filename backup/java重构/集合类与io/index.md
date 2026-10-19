@@ -1816,3 +1816,4 @@ public class ByteArrayStreamDemo {
     - 数据都放在内存中，处理特别大的数据时要留意内存占用。`toByteArray()` 会复制一份数据，也会额外占用内存。[[1]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayOutputStream.html)
     - 这两个字节数组流的 `close()` 不会产生实际影响；它们不负责释放文件等外部资源。[[2]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayInputStream.html) [[1]](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/ByteArrayOutputStream.html)
     **一句话记忆：**`ByteArrayOutputStream` 往内存里写，`ByteArrayInputStream` 从内存里的字节数组读。
+  输入流快捷操作(Java 9/11/12) 「待补全」
