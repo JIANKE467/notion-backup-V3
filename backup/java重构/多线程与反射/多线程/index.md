@@ -3,7 +3,7 @@
   "id": "3fe5a2dd-8276-8041-8657-d04b9403b91b",
   "url": "https://app.notion.com/p/3fe5a2dd827680418657d04b9403b91b",
   "created_time": "2026-10-19T08:03:00.000Z",
-  "last_edited_time": "2026-10-21T07:44:00.000Z"
+  "last_edited_time": "2026-10-22T09:36:00.000Z"
 }
 ---
 
@@ -115,45 +115,6 @@ public class Test {
   - 一个对象只能创建一个线程，想要创建多个相同线程不能重复调用start()方法，而是需要创建多个对象并调用不同对象的start()方法
   - 启动时是调用start()方法而不是run()方法，普通开发者无论何时都不该调用run()方法
 [线程的休眠/中断/终止](线程的休眠中断终止/index.md)
-  线程的休眠/中断/终止分别由几个方法控制
-  # sleep()休眠
-  `对象.sleep()`静态方法用于让线程从运行状态切换到 `TIMED_WAITING`（限时等待）状态
-  期间会释放CPU，不释放锁（读写锁什么的）
-  传入参数：等待时间（单位毫秒）
-  注意：必须使用**try-catch**捕获异常（当休眠中调用interrupt()方法中断时会抛出异常**`InterruptedException`**）
-  PS：**`sleep()`**** 期间被**interrupt()**打断，**中断标志会被清除，需要在catch 里要手动`对象.currentThread().interrupt()` 补回来
-  ```java
-public class SleepDemo {
-    public static void main(String[] args) {
-        System.out.println("开始休息...");
-        
-        try {
-            Thread.sleep(2000);          // 当前线程休眠 2 秒
-            // TimeUnit.SECONDS.sleep(2); // 更易读的写法
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt(); // 恢复中断状态
-        }
-        
-        
-        System.out.println("睡醒了");
-    }
-}
-
-  ```
-  # wait()等待
-  对象.wait()
-  # interrupt()中断标志
-  `对象.interrupt()`是一个中断标记，它提醒线程应该停止了，但不会强行停止线程，线程不做相关处理等于没听见
-  有三种不同的标记方法
-  | **方法** | **谁的** | **是否清除标志** |
-  | --- | --- | --- |
-  | `t.interrupt()` | 目标线程 t | —（是设置方） |
-  | `t.isInterrupted()` | 目标线程 t | **不清除**，可反复检查 |
-  | `Thread.interrupted()`（静态） | **当前线程** | **清除**，一次性检测**csdn.net+1** |
-  # **stop()停止**
-  这个方法在jdk1.1就被标记为弃用，原因是stop（）方法不安全，会强制抛出 `ThreadDeath` 异常并解锁它持有的所有锁（强制停止）
-  线程运行完会自动终止，不需要调用stop()关闭
-[（ai重构）线程的休眠/中断/终止](ai重构线程的休眠中断终止/index.md)
   # 备注
   Q ：本节中除了**interrupt()**方法是实例方法外，其他方法均为静态方法，但对象中不包含静态方法，假如要执行sleep()方法JVM怎么知道对哪个对象执行？
   A：根据线程的设计理念“线程间是协作而非强制”我们知道，线程只能对自己进行操作，而不应该去操作别的线程，所以静态方法默认就是对自己执行的
@@ -665,4 +626,170 @@ public class Counter {
   - 写法三只是写法二将xxx.class（当前类名）作为锁名时的语法糖🍬，写法三实际上是有锁名的（当前类名.class）
   - 不建议在写法二中将this作为锁名，会有安全风险（当前对象是public权限的，那外部类都能随便调用锁）
   核心思维及底层原理就是创建写法二：创建/找一个对象名/类名作为锁名，仅仅需要一个名字来区分锁
-  锁是
+[死锁](死锁/index.md)
+  在操作系统中我们学过，死锁就是两个消费者相互等待对方的资源导致程序卡死
+  Java中的死锁和这个概念一样，上节讲过可以使用synchronized关键字修饰方法/代码块/静态方法从而锁住该资源防止冲突，但当线程A持有线程B的锁，线程B持有线程A的锁时就会发生相互等待，这便是死锁
+  # 死锁的检测
+  如果你怀疑某个程序有死锁，可以按照以下的步骤排查
+  1. 运行该程序
+  1. 在另一个终端中执行`jps -l`以输出程序的pid（进程号）
+  1. 记住对应的进程号，用`jstack -l 进程号 > thread_dump.txt` 打印线程快照
+  1. 打开 `thread_dump.txt` 文件，看是否有类似这样的内容
+  ```plain text
+Found one Java-level deadlock:
+=============================
+"Thread-1":
+    waiting to lock monitor 0x0000000016b4e668 (object 0x000000076b0081c0, a java.lang.Object),
+    which is held by "Thread-0"
+
+"Thread-0":
+    waiting to lock monitor 0x0000000016b4c198 (object 0x000000076b0081d0, a java.lang.Object),
+    which is held by "Thread-1"
+  ```
+  或者使用简单办法（图像化工具）
+  使用IDEA中的**JConsole工具：**
+  在命令行输入`jconsole` 启动，选中你的 Java 进程连接后，切换到"线程"标签页，点击"检测死锁"按钮，工具会直接高亮显示死锁线程及其调用栈
+[wait和notify方法](wait和notify方法/index.md)
+  # wait()方法
+  作用：让当前线程释放锁等待
+  传入参数：
+  空参调用（无限等待）
+  毫秒数（等待指定毫秒数）
+  毫秒数，纳秒数（等待指定毫秒数+纳秒数）
+  注意⚠️：
+  - wait()方法必须在**synchronized 代码块中使用！（wait() 会释放锁，如果你没持有锁，谈何释放？）**
+  - wait()方法也有可能抛异常（被interrupt()中断会抛`InterruptedException`），因此需要使用try-catch捕获异常
+  - wait()方法也可以使用notify()方法正常唤醒
+  - **需要使用锁对象来调用wait方法，而不是线程对象**
+  语法：
+  ```java
+synchronized (锁名) {
+    try {
+        锁名.wait(); // 等待
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
+}               
+  ```
+  例子：
+  ```java
+public class WaitDemo {
+    public static void main(String[] args) {
+        Object lock = new Object();
+        boolean[] hasCake = {false};
+
+        // 消费者线程
+        Thread consumer = new Thread(() -> {
+            synchronized (lock) {
+                while (!hasCake[0]) {
+                    System.out.println("顾客：还没蛋糕，我等等...");
+                    try {
+                        lock.wait(); // 等待蛋糕
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                System.out.println("顾客：终于有蛋糕了，开吃！🍰");
+            }
+        });
+
+        // 生产者线程
+        Thread producer = new Thread(() -> {
+            try {
+                Thread.sleep(2000); // 花2秒做蛋糕
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            synchronized (lock) {
+                hasCake[0] = true;
+                System.out.println("厨师：蛋糕做好了！");
+                lock.notify(); // 通知顾客
+            }
+        });
+
+        consumer.start();
+        producer.start();
+    }
+}
+
+  ```
+  # **notify()方法**
+  作用：用于随机唤醒一个已经进入**WAITING 状态的线程**（执行过wait()方法的线程）
+  传入参数：空参调用
+  注意⚠️：
+  - notify()方法依然必须在**synchronized 代码块中使用！**
+  -  `notify()` 唤醒**一个**在此对象上等待的线程，**随机选择**，无法指定
+  - 它**不释放锁**，只是"发通知"，执行完synchronized 代码块才会释放锁
+  - 通常用于加锁代码块执行完毕后拉起别的等待锁的进程
+  - wait/notify/notifyAll 三兄弟**必须在同一个锁对象**上配合使用
+  - **需要使用锁对象来调用wait方法，而不是线程对象**
+  语法：
+  ```java
+synchronized (锁名) {
+		//前置代码...
+    锁名.notify(); // 只能叫醒一个，随机
+   
+} // 出了这个大括号，锁才真正释放
+
+  ```
+  # notifyAll()方法 
+  作用：唤醒所有已经进入**WAITING 状态的线程，**这些线程共同竞争锁
+  传入参数：空参调用
+  注意⚠️：
+  - notifyAll()方法依然必须在**synchronized 代码块中使用！**
+  -  `notifyAll()` 唤醒**一个**在此对象上等待的线程，**随机选择**，无法指定
+  - 它**不释放锁**，只是"发通知"，执行完synchronized 代码块才会释放锁
+  - 通常用于加锁代码块执行完毕后拉起别的等待锁的进程
+  - wait/notify/notifyAll 三兄弟**必须在同一个锁对象**上配合使用
+  - **需要使用锁对象来调用wait方法，而不是线程对象**
+  - 推荐使用notifyAll()方法而不是notify()方法（不容易漏喊）
+  语法：
+  ```java
+synchronized (锁名) {
+		//前置代码...
+    锁名.notifyAll(); // 全部叫醒后竞争一个锁
+   
+} // 出了这个大括号，锁才真正释放
+  ```
+[ThreadLocal类](threadlocal类/index.md)
+  **ThreadLocal类作用：同一个 ThreadLocal 变量，在每个线程中都有自己独立的一份值**（提供线程中的变量隔离）
+  # Q&A
+  Q：乂，不对啊，不是一个线程对象对应一个线程的吗（逻辑：同一个线程对象不能重复启动线程），那对象间本身就是隔离的，搞个这个类岂不是多此一举？
+  A：乂，这就是很恶心的一点了，有的写法会给业务类创建一个对象（A），然后在创建两个线程对象（α和β），然后将对象A作为参数传入α和β线程对象中，此时α和β对象间的隔离依然有效，但由于它们传入了同一个对象引用A，实际对A进行的操作是没有隔离的（给我听死了）🤮
+  **ThreadLocal类就是为了解决这种情况下隔离失效的问题的😭**
+  # 原理
+  创建一个**ThreadLocal类的方法就是创建了一个无论怎么折腾，它永远对线程间隔离的变量**
+  创建一个**ThreadLocal类**的对象一次只能获得一个变量，如果需要多个请使用不同的对象名多次创建（对象名用于标记该变量）
+  # 使用方法
+  ### 创建
+  1. 创建**ThreadLocal类的对象（ThreadLocal类是泛型类，需要声明存储数据的类型）**（对象名用于标记该变量）
+  ### 使用
+  使用`变量对象名.set()`来设置该变量的值
+  使用`变量对象名.get()`来查看该变量的值
+  ### 注意
+  - 该变量在线程间是隔离的（每个线程都能调用该变量，但每个线程对该变量的操作都是独立的）
+  - 该变量无法被子线程使用，如果需要子线程也能使用该隔离变量需要使用InheritableThreadLocal来创建“线程隔离变量的对象”
+  ### 例子
+  ```java
+public static void main(String[] args) throws InterruptedException {
+    ThreadLocal<String> local = new ThreadLocal<>();  //注意这是一个泛型类，存储类型为我们要存放的变量类型
+    Thread t1 = new Thread(() -> {
+        local.set("lbwnb");   //将变量的值给予ThreadLocal
+        System.out.println("线程1变量值已设定！");
+        try {
+            Thread.sleep(2000);    //间隔2秒
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("线程1读取变量值：");
+        System.out.println(local.get());   //尝试获取ThreadLocal中存放的变量
+    });
+    Thread t2 = new Thread(() -> {
+        local.set("yyds");   //将变量的值给予ThreadLocal
+        System.out.println("线程2变量值已设定！");
+    });
+    t1.start();
+    Thread.sleep(1000);    //间隔1秒
+    t2.start();
+}
+  ```
