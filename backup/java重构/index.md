@@ -5237,6 +5237,7 @@ public static void main(String[] args) throws InterruptedException {
     t2.start();
 }
       ```
+    定时器
 [Java编码逻辑](java编码逻辑/index.md)
   在Java中，我们需要按照面向对象的逻辑来编写软件，这部分专门用来说明Java对于面向对象的设计理念
   类
