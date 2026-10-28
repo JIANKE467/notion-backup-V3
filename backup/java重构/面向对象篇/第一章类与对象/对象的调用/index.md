@@ -3,7 +3,7 @@
   "id": "3ac5a2dd-8276-8019-9139-d872daefc95a",
   "url": "https://app.notion.com/p/3ac5a2dd827680199139d872daefc95a",
   "created_time": "2026-07-29T13:23:00.000Z",
-  "last_edited_time": "2026-07-29T14:19:00.000Z"
+  "last_edited_time": "2026-10-28T03:06:00.000Z"
 }
 ---
 
@@ -25,3 +25,4 @@ Animal.color=blue;
 Animal a=null;
 ```
 - 普通变量使用前需要初始化，但对象中的变量不需要（JVM在创建对象时会自动初始化）
+- 同一作用域下，变量名不允许重复，即使所属的类不同（对象本质就是存储引用的变量）
