@@ -51,6 +51,61 @@ public void set变量名(数据类型 变量名) {
   - getter和setter方法使用static修饰后只能访问静态的成员变量
   - getter有两种命名方式：手写➡️`get + 首字母大写的成员变量名`自动生成➡️`首字母大写的成员变量名`（但其实从语法上讲 命什么名都行）
   - setter只有一种命名方式（但其实从语法上讲 命什么名都行）
+  # 例子
+  定义：
+  ```java
+public class Student {
+    // 私有字段 —— 封装的核心
+    private String name;
+    private int age;
+    private double score;
+
+    // ========== name 的 getter/setter ==========
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    // ========== age 的 getter/setter ==========
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    // ========== score 的 getter/setter ==========
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
+    }
+}
+  ```
+  使用：
+  ```java
+public class BasicDemo {
+    public static void main(String[] args) {
+        Student student = new Student();
+
+        // 通过 setter 赋值
+        student.setName("张三");
+        student.setAge(20);
+        student.setScore(92.5);
+
+        // 通过 getter 取值
+        System.out.println("姓名: " + student.getName());  // 张三
+        System.out.println("年龄: " + student.getAge());   // 20
+        System.out.println("成绩: " + student.getScore()); // 92.5
+    }
+}
+  ```
   # 单例模式（了解即可，这里不专门说明）
   单例模式：全局只能创建和使用一个对象，不能创建更多的对象
   利用这个特性：[这个return可以活用，你甚至可以在返回值里返回一个新建的对象↓（不使用new创建对象，而是使用自定义的方法创建对象）](https://app.notion.com/p/3b15a2dd82768045b4e0d71b634b95d7#3b15a2dd827680dab18ecaddefdbf6de) 

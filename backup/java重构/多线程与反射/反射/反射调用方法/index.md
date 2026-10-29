@@ -3,7 +3,7 @@
   "id": "4075a2dd-8276-80ca-a307-e311fe5a0667",
   "url": "https://app.notion.com/p/4075a2dd827680caa307e311fe5a0667",
   "created_time": "2026-10-28T09:12:00.000Z",
-  "last_edited_time": "2026-10-28T10:16:00.000Z"
+  "last_edited_time": "2026-10-29T02:06:00.000Z"
 }
 ---
 
@@ -63,7 +63,7 @@ try {
 
 ```
 
-# 实例：调用public方法
+# 示例：调用public方法
 1. 先通过class获取类的对象
 1. 再获取方法
 1. 最后调用方法

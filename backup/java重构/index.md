@@ -729,6 +729,61 @@ public void set变量名(数据类型 变量名) {
       - getter和setter方法使用static修饰后只能访问静态的成员变量
       - getter有两种命名方式：手写➡️`get + 首字母大写的成员变量名`自动生成➡️`首字母大写的成员变量名`（但其实从语法上讲 命什么名都行）
       - setter只有一种命名方式（但其实从语法上讲 命什么名都行）
+      # 例子
+      定义：
+      ```java
+public class Student {
+    // 私有字段 —— 封装的核心
+    private String name;
+    private int age;
+    private double score;
+
+    // ========== name 的 getter/setter ==========
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    // ========== age 的 getter/setter ==========
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    // ========== score 的 getter/setter ==========
+    public double getScore() {
+        return score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
+    }
+}
+      ```
+      使用：
+      ```java
+public class BasicDemo {
+    public static void main(String[] args) {
+        Student student = new Student();
+
+        // 通过 setter 赋值
+        student.setName("张三");
+        student.setAge(20);
+        student.setScore(92.5);
+
+        // 通过 getter 取值
+        System.out.println("姓名: " + student.getName());  // 张三
+        System.out.println("年龄: " + student.getAge());   // 20
+        System.out.println("成绩: " + student.getScore()); // 92.5
+    }
+}
+      ```
       # 单例模式（了解即可，这里不专门说明）
       单例模式：全局只能创建和使用一个对象，不能创建更多的对象
       利用这个特性：[这个return可以活用，你甚至可以在返回值里返回一个新建的对象↓（不使用new创建对象，而是使用自定义的方法创建对象）](https://app.notion.com/p/3b15a2dd82768045b4e0d71b634b95d7#3b15a2dd827680dab18ecaddefdbf6de) 
@@ -5758,7 +5813,7 @@ try {
 
       ```
 
-      # 实例：调用public方法
+      # 示例：调用public方法
       1. 先通过class获取类的对象
       1. 再获取方法
       1. 最后调用方法
@@ -5787,6 +5842,73 @@ public class ReflectionDemo {
 }
 
       ```
+    修改类属性
+      可以通过反射访问一个类中定义的成员字段也可以修改一个类的对象中的成员字段值
+      整体看就几个步骤：
+      1. 获取class对象[获取class对象](https://app.notion.com/p/4055a2dd82768017a32be1c6b6b0dd72) 
+      1. 调用相关方法获取字段[获取成员字段的方法](https://app.notion.com/p/4075a2dd827680f08728cb60e4e017a7#4075a2dd827680c2b491dfa4f9d08e08) 
+      1. 调用set方法对成员字段进行修改
+      # set()方法
+        注意⚠️：set()方法与getter和setter没有任何关系，前者是反射的API，后者是用于封装私有字段的方法
+        ### 方法签名
+        `set()` 是 `java.lang.reflect.Field` 类中定义的方法，属于 `Field` 继承自 `AccessibleObject` 的字段操作 API：
+        ```java
+public void set(Object obj, Object value)
+        throws IllegalArgumentException, IllegalAccessException
+        ```
+        `Field` 还提供了一组针对基本类型的重载方法：
+        ```java
+void setInt(Object obj, int value)      // int
+void setLong(Object obj, long value)    // long
+void setDouble(Object obj, double value) // double
+void setBoolean(Object obj, boolean value) // boolean
+void setFloat(Object obj, float value)  // float
+void setShort(Object obj, short value)  // short
+void setByte(Object obj, byte value)    // byte
+void setChar(Object obj, char value)    // char
+        ```
+        ### 参数说明
+        | **参数** | **类型** | **含义** |
+        | --- | --- | --- |
+        | **obj** | `Object` | 目标**实例对象**。静态字段传 `null`；非静态字段必须传该 Field 声明类的实例 |
+        | **value** | `Object` | 要设置的新值。类型必须与字段类型**兼容**，否则抛异常 |
+        ### 返回值
+        没有返回值
+        ### 注意
+        - `set()` 会做**宽松类型匹配（Widening + 装箱）**
+        - 调用`setAccessible(true)`即可修改private私有字段和final修饰符的常量
+        ### 例子
+        ```java
+public class User {
+    public String name = "张三";
+    public static int count = 0;
+}
+
+//获取指定字段的Field对象
+Field nameField = User.class.getField("name");
+//获取指定字段的Field对象
+Field countField = User.class.getField("count");
+
+// 1. 非静态字段：必须传实例
+User user = new User();
+nameField.set(user, "李四");     // ✅
+
+// 2. 静态字段：传 null（推荐）
+countField.set(null, 100);       // ✅
+
+// 3. 静态字段：传任意实例也可以（会自动忽略 obj）
+countField.set(user, 200);       // ✅ 也能成功，obj 被忽略
+
+// 4. 非静态字段传 null —— 报错
+nameField.set(null, "王五");     // ❌ NullPointerException
+
+// 5. 传不相关的类型实例 —— 报错
+Cat cat = new Cat();
+nameField.set(cat, "赵六");      // ❌ IllegalArgumentException
+
+        ```
+      # 注意
+      还是那句话，反射可以绕过Java原本的权限限制，甚至修改常量，开发者应该慎重使用越权能力
 [Java编码逻辑](java编码逻辑/index.md)
   在Java中，我们需要按照面向对象的逻辑来编写软件，这部分专门用来说明Java对于面向对象的设计理念
   类
