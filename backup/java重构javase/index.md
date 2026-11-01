@@ -1,13 +1,13 @@
 ---
 {
   "id": "3a25a2dd-8276-8047-9b9e-ec97212b5761",
-  "url": "https://app.notion.com/p/Java-3a25a2dd827680479b9eec97212b5761",
+  "url": "https://app.notion.com/p/Java-JavaSE-3a25a2dd827680479b9eec97212b5761",
   "created_time": "2026-07-19T06:52:00.000Z",
-  "last_edited_time": "2026-10-19T08:03:00.000Z"
+  "last_edited_time": "2026-11-01T07:05:00.000Z"
 }
 ---
 
-# ☕ Java重构
+# ☕ Java重构（JavaSE）
 
 来源：青空の霞光
 
@@ -6406,6 +6406,12 @@ Annotation[] all = clazz.getAnnotations();
       1. getAnnotation方法返回该注解的一个**实例对象，**调用该对象的方法来查看注解成员的值
       ### **获取构造器、参数上的注解**
       这个省略，用到了再现查
+[GUI程序开发](gui程序开发/index.md)
+  别看了，这个没有学的必要，理由如下：
+  - 逻辑与界面混合导致可维护性差
+  - 代码一样但各平台ui实现样式不一致难以完成统一UI设计
+  - 线程不安全，逻辑和UI会互相影响
+  - 最重要的一点，这东西淘汰了，几乎没有项目用它
 [Java编码逻辑](java编码逻辑/index.md)
   在Java中，我们需要按照面向对象的逻辑来编写软件，这部分专门用来说明Java对于面向对象的设计理念
   类
@@ -6787,3 +6793,4 @@ while(it.hasNext()) {
 it.next();
 //删除了最后一次访问的元素
       ```
+JavaSE结束后，想要断点续播请看JavaWeb相关内容
