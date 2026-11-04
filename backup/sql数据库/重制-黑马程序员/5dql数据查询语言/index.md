@@ -3,7 +3,7 @@
   "id": "28c5a2dd-8276-807c-95b9-ce1eeb1add60",
   "url": "https://app.notion.com/p/5-DQL-28c5a2dd8276807c95b9ce1eeb1add60",
   "created_time": "2025-10-14T09:13:00.000Z",
-  "last_edited_time": "2025-11-08T08:20:00.000Z"
+  "last_edited_time": "2026-11-04T08:54:00.000Z"
 }
 ---
 
@@ -106,7 +106,7 @@ select 字段1,字段2...from...group by 字段3；
 # 排序查询
   语法
   ```sql
-select 字段列表 from 表名 order by 字段1 排序方式,字段2 排序方;
+select 字段列表 from 表名 order by 字段1 排序方式,字段2 排序方式;
   ```
   ### 排序方式（就两种）
   | 排序方式 | 作用 |

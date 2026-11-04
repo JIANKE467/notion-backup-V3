@@ -3,7 +3,7 @@
   "id": "28c5a2dd-8276-80f5-998b-caef38941026",
   "url": "https://app.notion.com/p/3-DDL-28c5a2dd827680f5998bcaef38941026",
   "created_time": "2025-10-14T09:10:00.000Z",
-  "last_edited_time": "2025-11-08T08:20:00.000Z"
+  "last_edited_time": "2026-11-04T08:15:00.000Z"
 }
 ---
 
@@ -58,14 +58,26 @@ show create table 表名;
   ### 创建
   ```sql
 create table 表名(
-  字段1 字段1类型 [comment 字段1注释]
+  字段1 字段1类型 [comment 字段1注释],
   ......
-)[comment 表注释]
+)[comment 表注释];
   ```
-  PS：每句之间用逗号分隔
+  PS：
+  每句之间用逗号分隔
   语句结束用分号结束
-  comment注释与- -注释的区别是：comment注释会存入数据库（数据库层）
-   - -与/**/注释不会存入数据库（脚本层）
+  字段类型相关说明见本节最后一部分
+  > `comment`注释与`- -`注释的区别是：comment注释会存入数据库（数据库层）
+    `- -`与`/**/`注释不会存入数据库（脚本层）
+  例子：
+  ```java
+CREATE TABLE table_name
+(
+column_name1 data_type(size),
+column_name2 data_type(size),
+column_name3 data_type(size),
+....
+);
+  ```
   ### 修改
   修改表名
   ```sql

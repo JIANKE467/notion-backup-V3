@@ -82,14 +82,26 @@ show create table 表名;
     ### 创建
     ```sql
 create table 表名(
-  字段1 字段1类型 [comment 字段1注释]
+  字段1 字段1类型 [comment 字段1注释],
   ......
-)[comment 表注释]
+)[comment 表注释];
     ```
-    PS：每句之间用逗号分隔
+    PS：
+    每句之间用逗号分隔
     语句结束用分号结束
-    comment注释与- -注释的区别是：comment注释会存入数据库（数据库层）
-     - -与/**/注释不会存入数据库（脚本层）
+    字段类型相关说明见本节最后一部分
+    > `comment`注释与`- -`注释的区别是：comment注释会存入数据库（数据库层）
+      `- -`与`/**/`注释不会存入数据库（脚本层）
+    例子：
+    ```java
+CREATE TABLE table_name
+(
+column_name1 data_type(size),
+column_name2 data_type(size),
+column_name3 data_type(size),
+....
+);
+    ```
     ### 修改
     修改表名
     ```sql
@@ -295,7 +307,7 @@ select 字段1,字段2...from...group by 字段3；
   # 排序查询
     语法
     ```sql
-select 字段列表 from 表名 order by 字段1 排序方式,字段2 排序方;
+select 字段列表 from 表名 order by 字段1 排序方式,字段2 排序方式;
     ```
     ### 排序方式（就两种）
     | 排序方式 | 作用 |
@@ -381,7 +393,7 @@ revoke 权限列表 no 数据库名.表名 from '用户名';
     | create | 创建数据库/表 |
     多个权限之间使用逗号分隔
 [7.函数](7函数/index.md)
-  **函数的参数可以是字段名**
+  **函数的参数可以是字段名（不加引号），也可以是字符串（加引号）**
   # 字符串函数
     mySQL内置了很多字符串函数，常用的有
     | 函数 | 功能 |

@@ -58,6 +58,12 @@ Thread t = new Thread(task);       // 👈 创建线程
   1. 调用Thread类的对象下的start方法
   ### 方法3：Lambda表达式
   这种就是方法2 Lambda表达式，和方法2原理一样
+  这种方式可以实现 重写+创建对象+启动 一气呵成
+  ```java
+Thread t = new Thread(() -> {
+    System.out.println("我是线程："+Thread.currentThread().getName());
+    }).start();
+  ```
   # 启动线程
   ### 方法1的启动方法（直接继承Thread类）
   两步走
@@ -101,7 +107,7 @@ public class Test {
 
         // 1步：创建线程定义的对象
         MyTask task = new MyTask();       
-	        // 2步: 创建Thread类对象,传入1步的对象
+	      // 2步: 创建Thread类对象,传入1步的对象
         Thread t = new Thread(task);      
         // 3步：调用 Thread 的 start() 启动
         t.start();                       
