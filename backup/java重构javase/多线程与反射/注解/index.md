@@ -23,6 +23,7 @@
 [自定义注解](自定义注解/index.md)
   Java支持自定义注解
   注解本质上是特殊的类
+  # 注解定义
   ## **1. 基本语法**
   ```java
 public @interface MyAnnotation {
@@ -39,13 +40,15 @@ public @interface MyAnnotation {
   和类定义类似，使用@interface关键字，内部定义方法及其类型（方法用于存放注解内容）
   ```java
 public @interface MyAnnotation {
-    String name();              
-    // 无默认值 → 使用时必须赋值
-    int age() default 18;       
+    String name();                // 无默认值 → 使用时必须赋值
+    
+    int age() default 18;     
     // 有默认值 → 使用时可省略
+    
     String[] tags() default {}; // 数组默认空
 }
   ```
+  # 注解调用
   ```java
 @MyAnnotation(name = "张三")
 @MyAnnotation(name = "李四", age = 30)
